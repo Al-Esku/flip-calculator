@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<body>
+    <div id="values">
+        <div>
+            <p>Number of digits:</p>
+            <input type="number" id="digits">
+        </div>
+        <div>
+            <p>Base:</p>
+            <input type="number" id="base">
+        </div>
+        <div>
+            <p>Flip number:</p>
+            <input type="number" id="flip">
+        </div>
+        <button onclick="singleValues()">Calculate</button>
+    </div>
+    <div><ul id="results"></ul></div>
+    <script>
+        const addResult = (result) => {
+            let results = document.getElementById("results");
+            let newResult = document.createElement("li");
+            newResult.textContent = result;
+            results.appendChild(newResult);
+        }
+
+        const singleValues = () => {
+            let numDigits = document.getElementById("digits").value;
+            let base = document.getElementById("base").value;
+            let flip = document.getElementById("flip").value
+            console.log("start")
+            if (numDigits % 2 === 0) {
+                halfDigits = numDigits / 2;
+            } else {
+                halfDigits = Math.ceil(numDigits/2);
+            }
+            maxNum = base ** halfDigits;
+            console.log(maxNum)
+            for (i = 0; i < maxNum; ++i) {
+                let digits = new Array(numDigits - 1);
+                let temp = i;
+                for (j = 0; j <= halfDigits; j++) {
+                    digits[j] = temp % base;
+                    temp = Math.floor(temp/base); 
+                }
+                let carry = 0;
+                let digit = 0;
+                for (k = numDigits - 1; k >= halfDigits; k--) {
+                    digit = digits[numDigits-k-1] * flip + carry;
+                    digits[k] = digit % base;
+                    carry = Math.floor(digit / base);
+                }
+                let firstNum = 0;
+                for (j = numDigits-1; j >= 0; j--) {
+                    firstNum = firstNum * base + digits[j];
+                }
+                let secondNum = 0;
+                for (j = 0; j < numDigits; j++) {
+                    secondNum = secondNum * base + digits[j];
+                }
+                firstNum *= flip;
+                if (firstNum === secondNum) {
+                    if (digits[numDigits-1] != 0) {
+                        let result = "(";
+                        for (j = numDigits - 1; j > 0; j--) {
+                            result += digits[j] + ",";
+                        }
+                        result += digits[0] + ")";
+                        addResult(result);
+                        console.log(result)
+                    }
+                }
+            }
+            console.log("end")
+        }
+    </script>
+    <style>
+        .result {
+            display: block;
+        }
+    </style>
+</body>
