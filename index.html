@@ -13,70 +13,136 @@
             <p>Flip number:</p>
             <input type="number" id="flip">
         </div>
-        <button onclick="singleValues()">Calculate</button>
+        <button onclick="setupFlips()">Calculate</button>
     </div>
-    <div><ul id="results"></ul></div>
+    <div id="status"></div>
+    <div>
+        <table id="results">
+        </table>
+    </div>
     <script>
-        const addResult = (result) => {
+        const addResult = (count, base, result, flip) => {
             let results = document.getElementById("results");
-            let newResult = document.createElement("li");
-            newResult.textContent = result;
-            results.appendChild(newResult);
+            let row = document.createElement("tr");
+            results.appendChild(row);
+            let countValue = document.createElement("td")
+            let baseValue = document.createElement("td")
+            let resultValue = document.createElement("td")
+            let flipValue = document.createElement("td")
+            countValue.textContent = count
+            baseValue.textContent = base
+            resultValue.textContent = result
+            flipValue.textContent = flip
+            row.appendChild(countValue)
+            row.appendChild(baseValue)
+            row.appendChild(resultValue)
+            row.appendChild(flipValue)
         }
 
-        const singleValues = () => {
+        const clearResults = () => {
+            let results = document.getElementById("results");
+            let status = document.getElementById("status")
+            while (results.firstChild) {
+                results.removeChild(results.firstChild)
+            }
+            while (status.firstChild) {
+                status.removeChild(status.firstChild)
+            }
+            let headerRow = document.createElement("tr")
+            let countHeader = document.createElement("th")
+            let baseHeader = document.createElement("th")
+            let numberHeader = document.createElement("th")
+            let flipHeader = document.createElement("th")
+            countHeader.textContent = "#"
+            baseHeader.textContent = "Base"
+            numberHeader.textContent = "Number"
+            flipHeader.textContent = "f"
+            results.appendChild(headerRow)
+            headerRow.appendChild(countHeader)
+            headerRow.appendChild(baseHeader)
+            headerRow.appendChild(numberHeader)
+            headerRow.appendChild(flipHeader)
+        }
+
+        const setupFlips = async () => {
             let numDigits = document.getElementById("digits").value;
             let base = document.getElementById("base").value;
-            let flip = document.getElementById("flip").value
-            console.log("start")
-            if (numDigits % 2 === 0) {
-                halfDigits = numDigits / 2;
-            } else {
-                halfDigits = Math.ceil(numDigits/2);
-            }
-            maxNum = base ** halfDigits;
-            console.log(maxNum)
-            for (i = 0; i < maxNum; ++i) {
-                let digits = new Array(numDigits - 1);
-                let temp = i;
-                for (j = 0; j <= halfDigits; j++) {
-                    digits[j] = temp % base;
-                    temp = Math.floor(temp/base); 
-                }
-                let carry = 0;
-                let digit = 0;
-                for (k = numDigits - 1; k >= halfDigits; k--) {
-                    digit = digits[numDigits-k-1] * flip + carry;
-                    digits[k] = digit % base;
-                    carry = Math.floor(digit / base);
-                }
-                let firstNum = 0;
-                for (j = numDigits-1; j >= 0; j--) {
-                    firstNum = firstNum * base + digits[j];
-                }
-                let secondNum = 0;
-                for (j = 0; j < numDigits; j++) {
-                    secondNum = secondNum * base + digits[j];
-                }
-                firstNum *= flip;
-                if (firstNum === secondNum) {
-                    if (digits[numDigits-1] != 0) {
-                        let result = "(";
-                        for (j = numDigits - 1; j > 0; j--) {
-                            result += digits[j] + ",";
-                        }
-                        result += digits[0] + ")";
-                        addResult(result);
-                        console.log(result)
+            let flip = document.getElementById("flip").value;
+            clearResults();
+
+            let runningText = document.createElement("p");
+            runningText.textContent = "loading...";
+            document.getElementById("status").appendChild(runningText);
+
+            let startTime = performance.now();
+
+            let count = await findFlips(numDigits, base, flip)
+
+            let endTime = performance.now();
+            let timeTaken = endTime - startTime;
+            runningText.textContent = "Found " + count + " results in " + timeTaken.toFixed(2) + " milliseconds";
+        }
+
+        const findFlips = (numDigits, base, flip) => {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    let count = 1;
+                    if (numDigits % 2 === 0) {
+                        halfDigits = numDigits / 2;
+                    } else {
+                        halfDigits = Math.ceil(numDigits / 2);
                     }
-                }
-            }
-            console.log("end")
+                    maxNum = base ** halfDigits;
+                    for (i = 0; i < maxNum; ++i) {
+                        let digits = new Array(numDigits - 1);
+                        let temp = i;
+                        for (j = 0; j <= halfDigits; j++) {
+                            digits[j] = temp % base;
+                            temp = Math.floor(temp/base); 
+                        }
+                        let carry = 0;
+                        let digit = 0;
+                        for (k = numDigits - 1; k >= halfDigits; k--) {
+                            digit = digits[numDigits-k-1] * flip + carry;
+                            digits[k] = digit % base;
+                            carry = Math.floor(digit / base);
+                        }
+                        let firstNum = 0;
+                        for (j = numDigits-1; j >= 0; j--) {
+                            firstNum = firstNum * base + digits[j];
+                        }
+                        let secondNum = 0;
+                        for (j = 0; j < numDigits; j++) {
+                            secondNum = secondNum * base + digits[j];
+                        }
+                        firstNum *= flip;
+                        if (firstNum === secondNum) {
+                            if (digits[numDigits-1] != 0) {
+                                let result = "(";
+                                for (j = numDigits - 1; j > 0; j--) {
+                                    result += digits[j] + ",";
+                                }
+                                result += digits[0] + ")";
+                                addResult(count, base, result, flip);
+                                count += 1
+                            }
+                        }
+                    }
+                    resolve(count - 1);
+                }, 0);
+            });
         }
     </script>
     <style>
-        .result {
-            display: block;
+        table {
+            font-family: arial, sans-serif;
+            border-collapse: collapse;
+        }
+
+        td, th {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
         }
     </style>
 </body>
